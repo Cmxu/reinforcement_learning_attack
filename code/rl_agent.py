@@ -3,21 +3,16 @@ import numpy as np
 import torch
 from torch.optim import Adam
 from numpy import linalg as LA
-import gym
 import time
 import argparse
 import json
-from utils import redirect_stdout
 import torch.nn as nn
 import itertools
 import torch.nn.functional as F
 from torch.distributions.normal import Normal
 from torch.distributions.categorical import Categorical
-from spinup.utils.mpi_pytorch import setup_pytorch_for_mpi, sync_params, mpi_avg_grads
-from spinup.utils.mpi_tools import mpi_fork, mpi_avg, proc_id, mpi_statistics_scalar, num_procs
-# from spinup_copy import mpi_avg, mpi_statistics_scalar, num_procs, setup_pytorch_for_mpi, sync_params, mpi_avg_grads
+#from spinup_copy import mpi_avg, mpi_statistics_scalar, num_procs, setup_pytorch_for_mpi, sync_params, mpi_avg_grads
 import scipy.signal
-from gym.spaces import Box, Discrete
 import os
 
 def combined_shape(length, shape=None):
@@ -940,35 +935,3 @@ def ppo_training(agent, dir, steps_per_epoch=4000, epochs=200, n_runs=1, max_ep_
     data['score'] = score_log
     with open(os.path.join(dir,'outputs.json'), 'w') as f:
         f.write(json.dumps(data))
-
-
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--alg', type=str, default='ddpg')
-    parser.add_argument('--env', type=str, default='HalfCheetah-v2')
-    parser.add_argument('--hid', type=int, default=256)
-    parser.add_argument('--l', type=int, default=2)
-    parser.add_argument('--gamma', type=float, default=0.99)
-    parser.add_argument('--seed', '-s', type=int, default=0)
-    parser.add_argument('--epochs', type=int, default=150)
-    parser.add_argument("--n_runs", type=int, default=1)
-    parser.add_argument("--steps_per_epoch", type=int, default=4000)
-    parser.add_argument("--num_test_episodes", type=int, default=5)
-    parser.add_argument("--dir", type=str, default='../tmp')
-    args = parser.parse_args()
-
-    torch.manual_seed(args.seed)
-    np.random.seed(args.seed)
-
-    redirect_stdout(open(os.path.join(args.dir, 'outputs.txt'), 'w'))
-
-    agent = eval(args.alg.upper())(env_name=args.env, ac_kwargs=dict(hidden_sizes=[args.hid] * args.l),
-                                   gamma=args.gamma, num_test_episodes=args.num_test_episodes)
-    agent.env.seed(args.seed)
-    agent.test_env.seed(args.seed)
-
-    if args.alg == 'ppo':
-        ppo_training(agent = agent, dir = args.dir, atk_agents=atk_agents, atk_params=args.atk_params, atk_radius = args.atk_radius, steps_per_epoch=args.steps_per_epoch,
-                 epochs=args.epochs, save_model=args.save, n_runs=args.n_runs, is_uniform=args.uniform, promote=args.promote)
-    else:
-        training(agent = agent, dir = args.dir, steps_per_epoch=args.steps_per_epoch, epochs=args.epochs, n_runs=args.n_runs)
