@@ -1,5 +1,8 @@
 import torch
+import torch.nn.functional as F
+import numpy as np
 from tqdm.notebook import tqdm
+from matplotlib import pyplot as plt
 from data_util import cifar_class_idx
 
 def accuracy(outputs, labels):

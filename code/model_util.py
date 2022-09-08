@@ -1,10 +1,13 @@
 import torch
 from torch import nn
+import torch.nn.functional as F
+from util import project_lp, accuracy
+
 
 class ImageClassificationBase(torch.nn.Module):
     def training_step(self, batch):
         images, labels = batch
-        images = images + project_lp(torch.randn_like(images, device=device), norm=2, xi=20)
+        images = images + project_lp(torch.randn_like(images, device=torch.device('cuda:0')), norm=2, xi=20)
         out = self(images)
         loss = F.cross_entropy(out, labels)
         return loss

@@ -1,4 +1,5 @@
 import torch
+import torch.nn.functional as F
 import numpy as np
 from sklearn.decomposition import PCA
 from data_util import toDeviceDataLoader

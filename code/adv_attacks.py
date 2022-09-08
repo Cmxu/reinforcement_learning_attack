@@ -9,7 +9,7 @@ def fgsm(x, y, k, norm = np.inf, xi = 1e-1, step_size = 1e-1, device = torch.dev
     loss.backward()
     return project_lp(step_size * torch.sign(v.grad), norm = norm, xi = xi)
 
-def pgd(x, y, k, norm = np.inf, xi = 1e-1, step_size = 1e-2, epochs = 40, random_restart = 4, device = device):
+def pgd(x, y, k, norm = np.inf, xi = 1e-1, step_size = 1e-2, epochs = 40, random_restart = 4, device = torch.device('cuda:0')):
     batch_size = x.shape[0]
     max_loss = F.cross_entropy(k(x), y)
     max_X = torch.zeros_like(x)
@@ -26,7 +26,7 @@ def pgd(x, y, k, norm = np.inf, xi = 1e-1, step_size = 1e-2, epochs = 40, random
     _,idx = torch.max(F.cross_entropy(k(x + random_delta), y, reduction = 'none').reshape(random_restart, batch_size), axis = 0)
     return random_delta[idx * batch_size + torch.arange(batch_size, dtype = torch.int64, device = device)]
 
-def geometric_attack(x, y, k, xi = 1e-1, step_size = 1e-2, epochs = 40, device = torch.device('cuda:0')):
+def geometric_attack(x, y, k, xi = 2e-1, step_size = 1e-2, epochs = 40, device = torch.device('cuda:0')):
     batch_size = x.shape[0]
     v = torch.zeros(batch_size, 2, 3, device = device)
     for i in range(epochs):
