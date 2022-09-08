@@ -142,7 +142,7 @@ class DDPGActorCritic(nn.Module):
             return self.pi(obs)
 
 class DDPG(object):
-    def __init__(self, env, test_env, ac_kwargs=dict(), replay_size=int(1e6), gamma=0.99, polyak=0.995, pi_lr=1e-3,
+    def __init__(self, env, ac_kwargs=dict(), replay_size=int(1e6), gamma=0.99, polyak=0.995, pi_lr=1e-3,
                  q_lr=1e-3, batch_size=100, act_noise=0.1, num_test_episodes=10, max_ep_len=1000):
         self.name = 'ddpg'
         self.gamma = gamma
@@ -153,7 +153,6 @@ class DDPG(object):
         self.max_ep_len = max_ep_len
         self.ac_kwargs = ac_kwargs
         self.env = env
-        self.test_env = test_env
 
         self.obs_dim = self.env.state_shape[1].item()
         self.act_dim = torch.prod(env.action_shape).item()
@@ -236,12 +235,12 @@ class DDPG(object):
     def test_agent(self):
         ep_rets = []
         for j in range(self.num_test_episodes):
-            o, d, ep_ret, ep_len = self.test_env.reset(), False, 0, 0
+            o, d, ep_ret, ep_len = self.env.test(), False, 0, 0
             while not (d or (ep_len == self.max_ep_len)):
                 # Take deterministic actions at test time (noise_scale=0)
                 test_a = self.get_action_test(o)
-                test_a = test_a.reshape(*self.test_env.action_shape)
-                o, r, d = self.test_env.step(test_a)
+                test_a = test_a.reshape(*self.env.action_shape)
+                o, r, d = self.env.step(test_a)
                 ep_ret += r
                 ep_len += 1
             ep_rets.append(ep_ret)
@@ -300,7 +299,7 @@ class TD3ActorCritic(nn.Module):
             return self.pi(obs)
 
 class TD3(object):
-    def __init__(self, env, test_env, ac_kwargs=dict(), replay_size=int(1e6), gamma=0.99,
+    def __init__(self, env, ac_kwargs=dict(), replay_size=int(1e6), gamma=0.99,
         polyak=0.995, pi_lr=1e-3, q_lr=1e-3, batch_size=100, act_noise=0.1, target_noise=0.2,
         noise_clip=0.5, policy_delay=2, num_test_episodes=10, max_ep_len=1000):
         self.name = 'td3'
@@ -315,7 +314,6 @@ class TD3(object):
         self.max_ep_len = max_ep_len
         self.ac_kwargs = ac_kwargs
         self.env = env
-        self.test_env = test_env
         self.obs_dim = self.env.state_shape[1].item()
         self.act_dim = torch.prod(env.action_shape).item()
         self.act_limit = 1
@@ -415,12 +413,12 @@ class TD3(object):
     def test_agent(self):
         ep_rets = []
         for j in range(self.num_test_episodes):
-            o, d, ep_ret, ep_len = self.test_env.reset(), False, 0, 0
+            o, d, ep_ret, ep_len = self.env.test(), False, 0, 0
             while not (d or (ep_len == self.max_ep_len)):
                 # Take deterministic actions at test time (noise_scale=0)
                 test_a = self.get_action_test(o)
-                test_a = test_a.reshape(*self.test_env.action_shape)
-                o, r, d = self.test_env.step(test_a)
+                test_a = test_a.reshape(*self.env.action_shape)
+                o, r, d = self.env.step(test_a)
                 ep_ret += r
                 ep_len += 1
             ep_rets.append(ep_ret)
@@ -510,7 +508,7 @@ class SACActorCritic(nn.Module):
             return a
 
 class SAC(object):
-    def __init__(self, env, test_env, ac_kwargs=dict(), replay_size=int(1e6), gamma=0.99,
+    def __init__(self, env, ac_kwargs=dict(), replay_size=int(1e6), gamma=0.99,
         polyak=0.995, lr=1e-3, alpha=0.2, batch_size=100, num_test_episodes=10, max_ep_len=1000):
         self.name = 'sac'
         self.gamma = gamma
@@ -522,7 +520,6 @@ class SAC(object):
         self.max_ep_len = max_ep_len
         self.ac_kwargs = ac_kwargs
         self.env = env
-        self.test_env = test_env
         self.obs_dim = self.env.state_shape[1].item()
         self.act_dim = torch.prod(env.action_shape).item()
         self.act_limit = 1
@@ -617,12 +614,12 @@ class SAC(object):
     def test_agent(self):
         ep_rets = []
         for j in range(self.num_test_episodes):
-            o, d, ep_ret, ep_len = self.test_env.reset(), False, 0, 0
+            o, d, ep_ret, ep_len = self.env.test(), False, 0, 0
             while not (d or (ep_len == self.max_ep_len)):
                 # Take deterministic actions at test time
                 test_a = self.get_action_test(o)
-                test_a = test_a.reshape(*self.test_env.action_shape)
-                o, r, d = self.test_env.step(test_a)
+                test_a = test_a.reshape(*self.env.action_shape)
+                o, r, d = self.env.step(test_a)
                 ep_ret += r
                 ep_len += 1
             ep_rets.append(ep_ret)
@@ -719,7 +716,7 @@ class PPOActorCritic(nn.Module):
         return self.step(obs)[0]
 
 class PPO(object):
-    def __init__(self, env, test_env, ac_kwargs=dict(), seed=0, steps_per_epoch=4000, gamma=0.99, clip_ratio=0.2, pi_lr=3e-4,
+    def __init__(self, env, ac_kwargs=dict(), seed=0, steps_per_epoch=4000, gamma=0.99, clip_ratio=0.2, pi_lr=3e-4,
         vf_lr=1e-3, train_pi_iters=80, train_v_iters=80, lam=0.97,
         target_kl=0.01, num_test_episodes = 10, max_ep_len = 1000):
 
@@ -741,7 +738,6 @@ class PPO(object):
         self.max_ep_len = max_ep_len
 
         self.env = env
-        self.test_env = test_env
 
         # Instantiate environment
         self.obs_dim = self.env.state_shape[1].item()
@@ -817,10 +813,10 @@ class PPO(object):
     def test(self):
         ep_rets = []
         for j in range(self.num_test_episodes):
-            o, d, ep_ret, ep_len = self.test_env.reset(), False, 0, 0
+            o, d, ep_ret, ep_len = self.env.test(), False, 0, 0
             while not (d or (ep_len == self.max_ep_len)):
                 # Take deterministic actions at test time
-                o, r, d, _ = self.test_env.step(self.get_action_test(o).reshape(*self.env.action_shape))
+                o, r, d, _ = self.env.step(self.get_action_test(o).reshape(*self.env.action_shape))
                 ep_ret += r
                 ep_len += 1
             ep_rets.append(ep_ret)

@@ -46,7 +46,7 @@ class attack_simulation():
             raise Exception('{} reduction is not implemented'.format(input_reduction))
         else:
             raise Exception('{} reduction is not implemented'.format(input_reduction))
-        self.train_ds, self.test_ds = toDeviceDataLoader(train_ds, test_ds, device = self.device, transform = self.in_transform)
+        self.train_dataset, self.test_dataset = toDeviceDataLoader(train_ds, test_ds, batch_size = 1, device = self.device, transform = self.in_transform)
         self.data_shape = torch.tensor(next(iter(self.train_dataset))[1].shape)
 
         self.action_reduction = action_reduction
@@ -77,6 +77,7 @@ class attack_simulation():
         self.reset_current_action()
 
         self.train_iterator = iter(self.train_dataset)
+        self.test_iterator = iter(self.test_dataset)
 
     def reset_current_action(self):
         self.current_action = torch.zeros(*self.action_shape, device=self.device)
@@ -88,6 +89,17 @@ class attack_simulation():
     def start(self):
         return self.reset()
 
+    def test(self):
+        self.reset_current_action()
+        try:
+            self.xt, self.x, self.y = next(self.test_iterator)
+        except:
+            self.train_iterator = iter(self.test_dataset)
+            self.xt, self.x, self.y = next(self.test_iterator)
+        self.x_base = torch.clone(self.x)
+        self.current_loss = F.cross_entropy(self.mdl(self.x), self.y)
+        return self.state_space_output()[0]
+        
     def reset(self):
         self.reset_current_action()
         try:
